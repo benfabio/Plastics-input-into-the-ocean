@@ -30,13 +30,13 @@ library("rworldmap")
 worldmap <- getMap(resolution = "high")
 
 # Define main working dir
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/")
 WD <- getwd() 
 
 ### ------------------------------------------------------------------------------------------------------------------------------------------------
 
 ### A°) Get PVs, remove outliers, scale them etc. Basically: prepare data for the models
-setwd(paste(WD,"/data/complete_data/", sep = "")) ; dir()
+setwd(paste(WD,"/data/", sep = "")) ; dir()
 
 MSW_collected_UN <- read.csv("MSW_collected_corrected_14_01_23.csv", na.strings = c("NA"), stringsAsFactors = F) # MSW = Municipal solid waste
 colnames(MSW_collected_UN) <- c("Country", 1990:2019) # adjust colnames
@@ -108,7 +108,6 @@ scaled$year <- year_complete
 scaled$GNI <- GNI_complete
 
 
-
 ### Load complete datasets
 scaled.H <- read.table("data_scaled_H.txt", h = T, sep = "\t")
 scaled.UM <- read.table("data_scaled_UM.txt", h = T, sep = "\t")
@@ -122,7 +121,6 @@ names(min) <- c("y","p1","p2","p3","p4","p5","p6")
 names(max) <- c("y","p1","p2","p3","p4","p5","p6")
 nyears <- length(error_country)
 ncountries <- nrow(error_country)
-
 
 ### Prepare tables for filling the predictions for missing countries (countries ith PV values but no MSW data)
 missing.countries <- country.details$Country[!(country.details$Country %in% unique(scaled.all$country))]
@@ -302,11 +300,11 @@ list.preds.L <- append(list.preds.L,list.preds.L.2)
 
 # tuned <- tuneRF(scaled[scaled$GNI == "H",c(2:7)],scaled[scaled$GNI == "H",1], mtryStart = 2, stepFactor = 0.9, improve = 0.0000000001, plot = F, trace = F) ))
 # best.mtry.H[i] <- tuned[which.min(tuned[,2]),1]
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/RF_models_training/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_models_training/")
 # For testing 
-inc <- "H"
-i <- 3
-n <- 3
+# inc <- "H"
+# i <- 3
+# n <- 3
 
 mtry.tests <- function(inc) {
     
@@ -374,7 +372,7 @@ mtry.tests <- function(inc) {
                              
                              # Summarize all info in ddf
                              skillz <- data.frame(GNI = inc, n = n, formula = form, R2 = r2, MSE = mse, mtry = best.mtry) # eo ddf
-                             setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/RF_models_training/mtry_tests")
+                             setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_models_training/mtry_tests")
                              save(skillz, file = paste("table_skills_RF_",inc,"_",form,"_",n,"_23_01_23.Rdata", sep = "") )
                              
                          } # eo for loop - n in N
@@ -392,22 +390,22 @@ mtry.tests("LM")
 mtry.tests("L")
 
 ### Check results
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/RF_models_training/mtry_tests") # dir()
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_models_training/mtry_tests") # dir()
 files <- dir()[grep("_23_01_23",dir())]
 res <- lapply(files, function(f) { d <- get(load(f)); return(d) })
 ddf <- bind_rows(res)
-dim(ddf); summary(ddf) ; head(ddf)
+# dim(ddf); summary(ddf) ; head(ddf)
 
 ### How many random models? 
-nrow(ddf[ddf$R2 <= 0,]) # L and LM models 
-nrow(ddf[ddf$R2 >= 0.9,]) # But also a lot of skillfull models 
+# nrow(ddf[ddf$R2 <= 0,]) # L and LM models 
+# nrow(ddf[ddf$R2 >= 0.9,]) # But also a lot of skillfull models 
 
 ### Subset: 
 ddf2 <- ddf[ddf$R2 > 0.1,]
-nrow(ddf2) # 3869 (97% of models)
+# nrow(ddf2) # 3869 (97% of models)
 
 ### Plot distribution of MSE/r2/AIC etc. facet per GNI and per preds
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/plots")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/plots")
 plot1 <- ggplot(aes(x = factor(mtry), y = R2, fill = factor(GNI)), data = ddf2[ddf2$mtry %in% c(2:5),]) + geom_boxplot(colour = "black") + 
         scale_fill_manual(name = "GNI", values = c("#3B9AB2","#F21A00","#EBCC2A","#78B7C5") ) + 
         xlab("mtry") + ylab("R2") + theme_bw() + facet_wrap(~factor( ddf2[ddf2$mtry %in% c(2:5),"GNI"] ), ncol = 2, scales = "free") 
@@ -420,7 +418,7 @@ ggsave(plot = plot1, filename = "boxplot_RF2_mtry_tests_R2_23_05_23.pdf", dpi = 
 ggsave(plot = plot2, filename = "boxplot_RF2_mtry_MSE_tests_23_05_23.pdf", dpi = 300, height = 7, width = 7)
 
 ### Look at most occuring mtry per GNI
-summary(factor(ddf2[ddf2$GNI == "H","mtry"])) # should be 3:5 according to this - with 4 the most frequently chosen value
+# summary(factor(ddf2[ddf2$GNI == "H","mtry"])) # should be 3:5 according to this - with 4 the most frequently chosen value
 # Examine distrbution of MSE and R2 within high performing H-models
 # ggplot(aes(x = factor(mtry), y = MSE, fill = factor(mtry)),
 #           data = ddf[ddf$mtry %in% c(1:5) & ddf$GNI == "H" & ddf$R2 >= 0.9,]) +
@@ -431,9 +429,9 @@ summary(factor(ddf2[ddf2$GNI == "H","mtry"])) # should be 3:5 according to this 
 #        geom_boxplot(colour = "black") + scale_fill_manual(name = "mtry", values = c("#3B9AB2","#F21A00","#EBCC2A","#78B7C5") )
 ### --> no strong differences --> keep mtry = 4
 
-summary(factor(ddf2[ddf2$GNI == "UM","mtry"])) # mtry = 3
-summary(factor(ddf2[ddf2$GNI == "LM","mtry"])) # mtry = 2
-summary(factor(ddf2[ddf2$GNI == "L","mtry"])) # mtry = 3
+# summary(factor(ddf2[ddf2$GNI == "UM","mtry"])) # mtry = 3
+# summary(factor(ddf2[ddf2$GNI == "LM","mtry"])) # mtry = 2
+# summary(factor(ddf2[ddf2$GNI == "L","mtry"])) # mtry = 3
 
 ### Use these to perform the GNI-level RF models on full data: 
 # mtry = 4
@@ -446,7 +444,7 @@ summary(factor(ddf2[ddf2$GNI == "L","mtry"])) # mtry = 3
 ### 23/05/23: Test the effect of nodesize on MSE and R2 (nodiesize to range between 3:15)
 
 library("parallel")
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/RF_models_training/nodesize_tests")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_models_training/nodesize_tests")
 
 # For testing mclapply below
 classes <- c("H","UM","LM","L")
@@ -524,7 +522,7 @@ nodesize.tester <- function(inc) {
                              
                                  # Summarize all info in ddf
                                  skillz <- data.frame(GNI = inc, n = n, formula = form, R2 = r2, MSE = mse, nodesize = node) # eo ddf
-                                 setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/RF_models_training/nodesize_tests")
+                                 setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_models_training/nodesize_tests")
                                  save(skillz, file = paste("table_skills_RF_",inc,"_",form,"_",n,"_nodesize=",node,"_23_05_23.Rdata", sep = "") )
                              
                             } # eo for loop - n in N
@@ -544,13 +542,13 @@ nodesize.tester(inc = "LM")
 nodesize.tester(inc = "L")
 
 ### Examine outputs:
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/RF_models_training/nodesize_tests")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_models_training/nodesize_tests")
 # dir(); length(dir())
 
 files <- dir()[grep("_23_05_23",dir())]
 res <- lapply(files, function(f) { d <- get(load(f)); return(d) })
 ddf <- bind_rows(res)
-dim(ddf); summary(ddf) ; head(ddf)
+# dim(ddf); summary(ddf) ; head(ddf)
 
 ### How many random models? 
 nrow(ddf[ddf$R2 <= 0,]) # L and LM models 
