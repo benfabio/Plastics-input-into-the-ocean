@@ -26,21 +26,21 @@ library("scales")
 library("wesanderson")
 library("mgcv")
 library("lme4")
+library("rworldmap")
 #library("MuMIn")
 #library("SDMTools")
 #library("merTools")
-library("rworldmap")
 
 worldmap <- getMap(resolution = "high")
 
 # Define main working dir
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/")
 WD <- getwd() 
 
 ### ------------------------------------------------------------------------------------------------------------------------------------------------
 
 ### First, as usual, get the PVs, remove outliers, scale them etc. Basically: prepare data for the models
-setwd(paste(WD,"/data/complete_data/", sep = "")) ; dir()
+setwd(paste(WD,"/data/", sep = "")) ; dir()
 MSW_collected_UN <- read.csv("MSW_collected_corrected_14_01_23.csv", na.strings = c("NA"), stringsAsFactors = F) # MSW = Municipal solid waste
 colnames(MSW_collected_UN) <- c("Country", 1990:2019) # adjust colnames
 young_pop <- read.csv("young_pop.csv", na.strings = c("NA"), stringsAsFactors = F)
@@ -74,7 +74,6 @@ for(i in 1:n) {
           MSW_collected_UN[i,-1] <- temp
       } # eo if loop
 } # eo for loop 
-
 # Set parameters: p = predictors, y = goal variable. Scale some PVs (GDP, energy_consumption etc.) to avoid errors in RF
 p1 <- t(elec_acc[,-1])
 p2 <- log(t(energy_consumption[,-1]))
@@ -173,7 +172,6 @@ for(c in missing.countries) {
 # m.missing <- m.missing[!(m.missing$country %in% c("Niger","Kyrgyzstan")),]
 # dim(m.missing)
 # nrow(m.missing)/ length(unique(m.missing$country)) # 30 years, 93 countries ok
-
 
 
 ### Define predictors set for income classes
@@ -369,7 +367,7 @@ train.predict.gams <- function(inc) {
                                   skillz <- data.frame(GNI = inc, n = n, formula = form, R2 = r2, MSE = mse, AIC = aic, DevExpl = devexpl)
                                   
                                   # Save GAM object
-                                  setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GAM_models_training")
+                                  setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GAM_models_training")
                                   save(gam1, file = paste("gam.full_",inc,"_",form,"_",n,".Rdata", sep = "") )
                                   save(gam2, file = paste("gam.fill_no_re_",inc,"_",form,"_",n,".Rdata", sep = "") )
                                   save(skillz, file = paste("table_skills_gam.full_",inc,"_",form,"_",n,".Rdata", sep = "") )
@@ -496,7 +494,7 @@ train.predict.gams <- function(inc) {
                                     # summary(error_country_perc)
                                    
                                     # Save outputs 
-                                    setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GAM_predictions")
+                                    setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GAM_predictions")
                                     write.table(x = error_country_perc, file = paste("table_error_perc_",inc,"_",form,"_",n,".txt", sep = ""), sep = "\t")
                                     write.table(x = pred, file = paste("table_pred_",inc,"_",form,"_",n,".txt", sep = ""), sep = "\t") 
                                     
@@ -515,7 +513,7 @@ train.predict.gams("LM")
 train.predict.gams("L")
 
 ### Check the skills of the trained models
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GAM_models_training")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GAM_models_training")
 length(dir()[grep("table_skills_gam.full_H",dir())]) 
 length(dir()[grep("table_skills_gam.full_UM",dir())]) 
 length(dir()[grep("table_skills_gam.full_LM",dir())])
@@ -525,7 +523,7 @@ files <- dir()[grep("table_skills",dir())]
 res <- lapply(files, function(f) { d <- get(load(f)); return(d) })
 # Rbind
 ddf <- bind_rows(res)
-dim(ddf); summary(ddf)
+# dim(ddf); summary(ddf)
 
 ### R2
 plot <- ggplot(aes(x = factor(GNI), y = R2, fill = factor(GNI)), data = ddf) + geom_boxplot(colour = "black") + 
@@ -550,7 +548,7 @@ ggsave(plot = plot, filename = "boxplot_full.gams_DevExpl_GNI_23_01_23.pdf", dpi
 
 
 ### And check % error for each class/ country?
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GAM_predictions")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GAM_predictions")
 # length(dir()[grep("table_error_perc_H",dir())]) 
 # length(dir()[grep("table_error_perc_UM",dir())]) 
 # length(dir()[grep("table_error_perc_LM",dir())])
@@ -560,12 +558,13 @@ files <- dir()[grep("table_error_perc",dir())]
 res <- lapply(files, function(f) { d <- read.table(f, sep = "\t", h = T); return(d) })
 # Rbind
 ddf <- bind_rows(res)
-colnames(ddf)
+#colnames(ddf)
 # Melt
 m.ddf <- melt(ddf[,c("Country","mean")], id.vars = "Country")
-dim(m.ddf)
-head(m.ddf)
-summary(m.ddf$value) # from -19% to +42%, but median error is 0.37% only ! 
+#dim(m.ddf)
+#head(m.ddf)
+#summary(m.ddf$value) # from -19% to +42%, but median error is 0.37% only ! 
+
 sum.error <- data.frame(m.ddf %>% group_by(Country) %>% summarize(median = median(value)) ) # eo ddf
 # summary(sum.error) 
 
@@ -573,23 +572,23 @@ sum.error <- data.frame(m.ddf %>% group_by(Country) %>% summarize(median = media
 
 ### 23/01/23: Compute mean annual ensemble predictions. Re-compute error of the ensemble predictions to the y_org. 
 ### Compare to the mean error from the 1'000 predictions (data in the "table_error_perc" tables).
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GAM_predictions")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GAM_predictions")
 # Load all predictions and compute mean/median annual MSW per country
 files <- dir()[grep(paste("table_pred_", sep = ""),dir())] # length(files)
 res <- lapply(files, function(f) { d <- read.table(f, sep = "\t", h = T); return(d) } ) # eo lapply
 # Rbind
 ddf <- bind_rows(res)
-#dim(ddf); head(ddf) 
+# dim(ddf); head(ddf) 
 colnames(ddf)[c(2:length(ddf))] <- as.character(c(1990:2019))
 # unique(ddf$Country) # should be 217 - YES 
 # Melt to put years as vector
 m.ddf <- melt(ddf, id.vars = "Country") # dim(m.ddf) # 2'806'232
 colnames(m.ddf)[c(2:3)] <- c("Year","MSW")
-summary(m.ddf[m.ddf$Country == "Botswana",])
+# summary(m.ddf[m.ddf$Country == "Botswana",])
 
 # Convert Inf to NAs
 is.na(m.ddf) <- sapply(m.ddf, is.infinite)
-summary(m.ddf[m.ddf$Country == "Botswana",])
+# summary(m.ddf[m.ddf$Country == "Botswana",])
 
 # Compute ensemble metrics 
 ensemble.range <- data.frame(m.ddf %>% group_by(Country,Year) %>% 
@@ -598,7 +597,7 @@ ensemble.range <- data.frame(m.ddf %>% group_by(Country,Year) %>%
                 Mean = mean(MSW, na.rm = T), Stdev = sd(MSW, na.rm = T)) 
 ) # eo ddf
 # Check
-summary(ensemble.range)
+# summary(ensemble.range)
 # ensemble.range[ensemble.range$Mean > 4,]
 # ensemble.range[ensemble.range$Median > 4,]
 
@@ -609,8 +608,8 @@ summary(ensemble.range)
 
 # Dcast to have years as columns
 ensemble <- dcast(ensemble.range, Country ~ Year)
-dim(ensemble) # 217x31 - good
-summary(ensemble)
+#dim(ensemble) # 217x31 - good
+#summary(ensemble)
 
 ### Ok, save ensemble predictions of MSWc
 write.table(x = ensemble.range, "table_ranges_GAM_median_predictions+ranges_22_02_23.txt", sep = "\t")
@@ -638,6 +637,7 @@ for(land in unique(ensemble$Country)) {
 # Check
 #summary(error_ensemble)
 #dim(error_ensemble) # good
+
 ### Save error table
 write.table(error_ensemble, file = "table_GAM_median_errors_percentage_23_01_23.txt", sep = ";")
 
