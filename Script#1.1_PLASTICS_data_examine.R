@@ -26,7 +26,7 @@ library("scales")
 library("wesanderson")
 
 # Define main working dir
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/")
 WD <- getwd() 
 
 ### ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -34,7 +34,7 @@ WD <- getwd()
 ### PART I: EXAMINING DATA DISTRIBUTION AND PREPARING SCALED DATA FOR MACHINE LEARNING MODELS (GAMs, RF and NNET) 
 
 ### A°) Get data sent by Charlotte L., remove outliers, scale them etc. Basically: prepare data for the models
-setwd(paste(WD,"/data/complete_data/", sep = "")) ; dir()
+setwd(paste(WD,"/data/", sep = "")) #; dir()
 
 # Load datasets, check dimensions, delete useless stuff etc.
 MSW_collected_UN <- read.csv("MSW_collected_corrected_14_01_23.csv", na.strings = c("NA"), stringsAsFactors = F) # MSW = Municipal solid waste
@@ -76,7 +76,7 @@ country.details <- read.csv("country_details.csv", stringsAsFactors = F)[,c(1,8)
 # sum(!is.na(MSW_collected_UN[,2:length(MSW_collected_UN)])) # 1900
 
 removed <- 0
-n <- nrow(young_pop) - 1 ; n
+n <- nrow(young_pop) - 1 #; n
 # i <- 14 # for testing
 
 for(i in 1:n) {
@@ -215,7 +215,7 @@ scaled$GNI <- GNI_complete
 ### Check completion of PVs table
 # dim(scaled) ; summary(scaled) ; unique(scaled$GNI)
 # Merge L and LM GNI categories
-summary(factor(scaled$GNI)) # L == 35 points, 153 = 169, UM = 294, H = 882
+# summary(factor(scaled$GNI)) # L == 35 points, 153 = 169, UM = 294, H = 882
 #scaled[scaled$GNI == "LM","GNI"] <- rep("L", 169)
 # Rename UM 
 #scaled[scaled$GNI == "UM","GNI"] <- rep("M", 294)
@@ -233,7 +233,7 @@ scaled.H <- scaled[scaled$GNI == "H",]
 scaled.UM <- scaled[scaled$GNI == "UM",]
 scaled.LM <- scaled[scaled$GNI == "LM",]
 scaled.L <- scaled[scaled$GNI == "L",]
-dim(scaled.H); dim(scaled.UM); dim(scaled.LM); dim(scaled.L)
+# dim(scaled.H); dim(scaled.UM); dim(scaled.LM); dim(scaled.L)
 
 ### Create matrix to fill with errors of predict for each country (for later)
 error_country <- matrix(NA, nrow = dim(country.details)[1], ncol = nyears)
@@ -315,18 +315,19 @@ ggsave(plot = plot, filename = "plot_distrib_young_pop.pdf", dpi = 300, height =
 ### Aims to assess how much L and LM overlap to see if it's ok to merge them.
 require("vegan")
 require("FactoMineR")
+
 # Start from 'scaled'
-colnames(scaled); summary(factor(scaled$GNI))
+# colnames(scaled); summary(factor(scaled$GNI))
 
 # Perform PCA with the 6 predictors (scale.uni = T)
 pca <- PCA(X = scaled[,c(2:7)], ncp = 4, graph = F, scale.unit = TRUE)
-summary(pca) # Keep first 3 axes
+# summary(pca) # Keep first 3 axes
 pc1 <- "53.4"; pc2 <- "24.5" ; pc3 <- "10.1"
 # head(pca$ind$coord)
 scaled$PC1 <- pca$ind$coord[,1]
 scaled$PC2 <- pca$ind$coord[,2]
 scaled$PC3 <- pca$ind$coord[,3]
-summary(scaled)
+# summary(scaled)
 
 ### Draw 2 kinds of plots: Violin plots of the distribution of PCs per GNI & GNI2 + dot plot in PC space
 # levels(factor(scaled$GNI)) ; levels(factor(scaled$GNI2))
@@ -341,7 +342,7 @@ ggsave(plot = plot1, filename = "plot_GNI_PC1+2.pdf", height = 5, width = 7, dpi
 
 ### Violin plots per PCs -> first mekt to have PC as factor
 m.scaled <- melt(scaled[,c(8:13)], id.vars = c("country","year","GNI"))
-summary(m.scaled)
+# summary(m.scaled)
 violin1 <- ggplot(aes(x = factor(GNI), y = value, fill = factor(GNI)), data = m.scaled) + geom_violin(colour = "black") + 
             scale_fill_manual(name = "GNI", values = c("#3B9AB2","#F21A00","#EBCC2A","#78B7C5")) + theme_bw() + 
             ylab("Distribution") + xlab("GNI") + facet_wrap(factor(variable)~.)
@@ -350,7 +351,7 @@ ggsave(plot = violin1, filename = "violin_GNI_PC1+2+3.pdf", height = 5, width = 
 
 ### Interesting...check distrib of scaled PVs per GNI 
 m.scaled2 <- melt(scaled[,c(1:10)], id.vars = c("country","year","GNI"))
-summary(m.scaled2)
+# summary(m.scaled2)
 violinPVs <- ggplot(aes(x = factor(GNI), y = value, fill = factor(GNI)), data = m.scaled2) + geom_violin(colour = "black") + 
             scale_fill_manual(name = "GNI", values = c("#3B9AB2","#F21A00","#EBCC2A","#78B7C5")) + theme_bw() + 
             ylab("Distribution") + xlab("GNI") + facet_wrap(factor(m.scaled2$variable), ncol = 3, scales = "free")
