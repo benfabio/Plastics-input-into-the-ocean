@@ -450,10 +450,10 @@ setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_models_training
 classes <- c("H","UM","LM","L")
 nodesizesss <- seq(from = 3, to = 15, by = 1) ; nodesizesss
 # For testing:
-inc <- "H"
-node <- 8
-i <- 3
-n <- 13
+# inc <- "H"
+# node <- 8
+# i <- 3
+# n <- 13
 
 nodesize.tester <- function(inc) {
     
@@ -551,12 +551,12 @@ ddf <- bind_rows(res)
 # dim(ddf); summary(ddf) ; head(ddf)
 
 ### How many random models? 
-nrow(ddf[ddf$R2 <= 0,]) # L and LM models 
-nrow(ddf[ddf$R2 >= 0.9,]) # But also a lot of skillfull models 
+# nrow(ddf[ddf$R2 <= 0,]) # L and LM models 
+# nrow(ddf[ddf$R2 >= 0.9,]) # But also a lot of skillfull models 
 
 ### Subset: 
 ddf2 <- ddf[ddf$R2 > 0.1,]
-nrow(ddf2) # 3869 (97% of models)
+# nrow(ddf2) # 3869 (97% of models)
 
 ### Plot distribution of MSE/r2/AIC etc. facet per GNI and per preds
 setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/plots")
@@ -589,11 +589,11 @@ ggsave(plot = plot3, filename = "boxplot_RF2_nodesize_tests_R2_23_05_23_rescaled
 
 ### -----------------------------------------------------------------
 
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/RF_models_training/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_models_training/")
 # For testing the fun below
-inc <- "L"
-i <- 3
-n <- 3
+# inc <- "L"
+# i <- 3
+# n <- 3
 
 RF.predicter <- function(inc) {
     
@@ -655,7 +655,7 @@ RF.predicter <- function(inc) {
                              
                                 # Summarize all info in ddf & save
                                 skillz <- data.frame(GNI = inc, model.number = n, formula = form, R2 = r2, MSE = mse) # eo ddf
-                                setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/RF_models_training")
+                                setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_models_training")
                                 save(skillz, file = paste("table_skills_RF_",inc,"_",form,"_",n,".Rdata", sep = "") ) # saving model skills
                                 save(RF, file = paste("RF.full_",inc,"_",form,"_",n,".Rdata", sep = "") ) # saving model object
                                 
@@ -737,7 +737,7 @@ RF.predicter <- function(inc) {
                                   # summary(error_country_perc)
                                  
                                   # Save outputs 
-                                  setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/RF_predictions")
+                                  setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_predictions")
                                   write.table(x = error_country_perc, file = paste("table_error_perc_",inc,"_",form,"_",n,".txt", sep = ""), sep = "\t")
                                   write.table(x = pred, file = paste("table_pred_",inc,"_",form,"_",n,".txt", sep = ""), sep = "\t") 
                                   
@@ -757,7 +757,7 @@ RF.predicter("LM")
 RF.predicter("L")
 
 ### Check the skills of the trained RF models
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/RF_models_training") #; dir()
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_models_training") #; dir()
 # If needed, remove files from older models
 # files2delete <- list.files()
 # files2delete <- files2delete[!grepl("19_01_23",files2delete)]
