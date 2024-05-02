@@ -814,8 +814,7 @@ colnames(ddf)[c(2:31)] <- c(1990:2019)
 
 ### To rank countries according to their mean error (all years included)
 m.ddf <- melt(ddf[,c("Country","mean")], id.vars = "Country")
-# dim(m.ddf)
-# head(m.ddf)
+# dim(m.ddf); head(m.ddf)
 # summary(m.ddf$value) # mean error ranges from -58% to +83%, but median mean error is -0.14% only !
 sum.error <- data.frame(m.ddf %>% group_by(Country) %>% summarize(median = median(value)) ) # eo ddf
 # summary(sum.error)
@@ -827,7 +826,7 @@ m.ddf <- melt(ddf[,c(1:31)], id.vars = "Country")
 #head(m.ddf)
 # summary(m.ddf$error) # from -75% to +210%, but median error is -0.1% only ! 
 med.error <- data.frame(m.ddf %>% group_by(Country,Year) %>% summarize(med = median(error)) ) # eo ddf
-head(med.error); summary(med.error)
+# head(med.error); summary(med.error)
 # Dcast to put years as columns
 d.med.error <- dcast(data = med.error, formula = Country ~ Year)
 # dim(d.med.error) # 217x31 - good dimensions 
@@ -851,7 +850,8 @@ ensemble.range <- data.frame(m.ddf %>% group_by(Country,Year) %>%
                 Mean = mean(MSW, na.rm = T), Stdev = sd(MSW, na.rm = T)) 
 ) # eo ddf
 # Check
-summary(ensemble.range)
+# summary(ensemble.range)
+
 # Save this as table for charlotte
 write.table(ensemble.range, file = "table_ranges_RF_median_predictions+ranges_22_02_23.txt", sep = ";")
 
