@@ -22,12 +22,12 @@ library("wesanderson")
 library("modEvA") # ?MESS
 
 # Define main working dir
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/")
 WD <- getwd() 
 
 ### ------------------------------------------------------------------------------------------------------------------------------------------------
 
-setwd(paste(WD,"/data/complete_data/", sep = "")) ; dir()
+setwd(paste(WD,"/data/", sep = "")) ; dir()
 MSW_collected_UN <- read.csv("MSW_collected_corrected_14_01_23.csv", na.strings = c("NA"), stringsAsFactors = F) # MSW = Municipal solid waste
 colnames(MSW_collected_UN) <- c("Country", 1990:2019) # adjust colnames
 young_pop <- read.csv("young_pop.csv", na.strings = c("NA"), stringsAsFactors = F)
@@ -135,7 +135,7 @@ missing$p5 <- NA
 missing$p6 <- NA
 missing <- cbind(missing, as.data.frame(matrix(NA, ncol = nyears, nrow = length(missing.countries))) )
 colnames(missing)[c(11:length(missing))] <- as.character(c(1990:2019))
-#  head(missing)
+#head(missing)
 m.missing <- melt(missing, id.vars = c("country","GNI","index","y","p1","p2","p3","p4","p5","p6"))
 m.missing <- m.missing[,-c(length(m.missing))]
 # Change last colname
@@ -164,8 +164,6 @@ te$Country <- countries_complete
 te$Year <- year_complete
 te$GNI <- GNI_complete
 m.full <- te
-head(m.full)
-head(m.missing)
 
 ### Check Botswana for Charlotte: 
 # m.full[m.full$Country == "Botswana",] # rows 321:323
@@ -177,16 +175,15 @@ head(m.missing)
 # summary(pca)
 
 ### First, compare ranges of PVs between m.full vs. m.missing
-summary(m.full[,c("p1","p2","p3","p4","p5","p6")])
-summary(m.missing[,c("p1","p2","p3","p4","p5","p6")])
+#summary(m.full[,c("p1","p2","p3","p4","p5","p6")])
+#summary(m.missing[,c("p1","p2","p3","p4","p5","p6")])
 
 ### Bind in same ddf
 m.full$Status <- "Full"
 m.missing$Status <- "Missing"
 names <- colnames(m.full)[c(8,9,10,2:7,11)] # ; names
 ddf <- rbind(m.full[,names], m.missing[,names])
-dim(ddf)
-summary(ddf)
+#dim(ddf);summary(ddf)
 
 ### Plot distribs between Status, and facet per GNI
 p1 <- ggplot(data = ddf, aes(x = factor(Status), y = p1, fill = factor(Status))) + 
@@ -256,7 +253,7 @@ res <- mclapply(c("H","UM","LM","L"), function(c) {
 ) # eo mclapply - c per GNI
 # Rbind
 ranges <- do.call(rbind,res)
-ranges
+#ranges
 
 ### Use 'ranges' to identify the countries x years in m.missing that go outside the obs ranges of PV
 m.missing$ID <- paste(m.missing$Country, m.missing$Year, sep = "_")
@@ -296,18 +293,17 @@ res <- mclapply(c("H","UM","LM","L"), function(c) {
 # Rbind
 out <- do.call(rbind,res)
 # dim(out)
-unique(out$ID)
-length(unique(out$ID)) / length(unique(m.missing$ID)) # 35.8% of the missing entries have some PV outside of the training range
+# length(unique(out$ID)) / length(unique(m.missing$ID)) # 35.8% of the missing entries have some PV outside of the training range
 
 # Extract country from this 
 out$Country <- do.call(rbind, strsplit(out$ID, split = "_", fixed = T))[,1]
 # head(out)
 # tail(out)
-unique(out$Country)
+#unique(out$Country)
 #out[is.na(out$Country),]
 
 out.table <- na.omit(out)
-unique(out.table$Country) # 55 countries
+#unique(out.table$Country) # 55 countries
 
 tally <- data.frame( out.table %>% group_by(Country) %>% summarize(n = n(), rate = n/(6*30)) )
 tally <- tally[order(tally$rate, decreasing = T),]
