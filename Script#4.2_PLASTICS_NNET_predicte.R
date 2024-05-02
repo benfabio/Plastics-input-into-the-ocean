@@ -27,13 +27,13 @@ library("neuralnet")
 worldmap <- getMap(resolution = "high")
 
 # Define main working dir
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/")
 WD <- getwd() 
 
 ### ------------------------------------------------------------------------------------------------------------------------------------------------
 
 ### First, as usual, get the PVs, remove outliers, scale them etc. Basically: prepare data for the models
-setwd(paste(WD,"/data/complete_data/", sep = "")) ; dir()
+setwd(paste(WD,"/data/", sep = "")) ; dir()
 MSW_collected_UN <- read.csv("MSW_collected_corrected_14_01_23.csv", na.strings = c("NA"), stringsAsFactors = F) # MSW = Municipal solid waste
 colnames(MSW_collected_UN) <- c("Country", 1990:2019) # adjust colnames
 young_pop <- read.csv("young_pop.csv", na.strings = c("NA"), stringsAsFactors = F)
@@ -67,7 +67,6 @@ for(i in 1:n) {
           MSW_collected_UN[i,-1] <- temp
       } # eo if loop
 } # eo for loop 
-
 # Set parameters: p = predictors, y = goal variable. Scale some PVs (GDP, energy_consumption etc.) to avoid errors in RF
 p1 <- t(elec_acc[,-1])
 p2 <- log(t(energy_consumption[,-1]))
@@ -222,7 +221,6 @@ list.preds.L.2 <- list.preds.L.2[c(4,13,14,15,16,20)]
 list.preds.L <- append(list.preds.L,list.preds.L.2)
 # 7 sets
 
-
 ### -----------------------------------------------------------------
 
 ### Write FUN to predict MSW using NNET
@@ -289,7 +287,7 @@ nnet.predicter <- function(inc) {
                           r2 <- summary(lm(predict.NN.unscaled ~ MSW.obs))$r.squared
                           
                           # Save model and skillz
-                          setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/NNET_models_training/")
+                          setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/NNET_models_training/")
                           skillz <- data.frame(GNI = inc, formula = form1, R2 = r2, MSE = mse) 
                           save(skillz, file = paste("table_skills_",inc,"_",form1,".Rdata", sep = "") )
                           save(NN, file = paste("NNET.full_",inc,"_",form1,".Rdata", sep = "") )
@@ -363,7 +361,7 @@ nnet.predicter <- function(inc) {
                           error_country_perc$mean <- error_avg
                                
                           # Save outputs 
-                          setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/NNET_predictions")
+                          setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/NNET_predictions")
                           write.table(x = error_country_perc, file = paste("table_error_perc_",inc,"_",form1,".txt", sep = ""), sep = "\t")
                           write.table(x = pred, file = paste("table_pred_",inc,"_",form1,".txt", sep = ""), sep = "\t")          
                                                 
@@ -380,13 +378,13 @@ nnet.predicter("LM")
 nnet.predicter("L")
 
 ### Check the skills of the trained models
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/NNET_models_training/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/NNET_models_training/")
 files <- dir()[grep("table_skills",dir())] # files
 res <- lapply(files, function(f) { d <- get(load(f)); d$file <- f; return(d) })
 ddf <- bind_rows(res) ; rm(res); gc()
 
 ### Save plots 
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/plots/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/plots/")
 # R2
 plot <- ggplot(aes(x = factor(GNI), y = R2, fill = factor(GNI)), data = ddf) + geom_boxplot(colour = "black") + 
             scale_fill_manual(name = "R2", values = c("#3B9AB2","#F21A00","#EBCC2A","#78B7C5") ) + 
@@ -401,7 +399,7 @@ ggsave(plot = plot, filename = "boxplot_full.nnet_MSE_GNI_24_01_23.pdf", dpi = 3
 
 
 ### Extract predictions and errors and compute ensembles
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/NNET_predictions") #; dir()
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/NNET_predictions") #; dir()
 files <- dir()[grep(paste("table_pred_", sep = ""),dir())] # length(files)
 res <- lapply(files, function(f) { d <- read.table(f, sep = "\t", h = T); return(d) } ) # eo lapply
 # Rbind
