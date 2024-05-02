@@ -26,19 +26,17 @@ library("lme4")
 #library("MuMIn")
 library("merTools")
 library("rworldmap")
-#install.packages("MuMIn")
-#install.packages("merTools")
 
 worldmap <- getMap(resolution = "high")
 
 # Define main working dir
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/")
 WD <- getwd() 
 
 ### ------------------------------------------------------------------------------------------------------------------------------------------------
 
 ### First, load the data 
-setwd(paste(WD,"/data/complete_data/", sep = "")) ; dir()
+setwd(paste(WD,"/data/", sep = "")) ; dir()
 scaled.H <- read.table("data_scaled_H.txt", h = T, sep = "\t")
 scaled.UM <- read.table("data_scaled_UM.txt", h = T, sep = "\t")
 scaled.LM <- read.table("data_scaled_LM.txt", h = T, sep = "\t")
@@ -198,10 +196,10 @@ gam.H <- gam(y ~ s(p1,k=35,bs="tp") + s(p2,bs="tp") + s(p3,bs="tp") + s(p4,bs="t
 #      
 gam.H.red <- gam(y ~ s(p2,bs="tp") + s(p3,bs="tp") + s(p4,bs="tp") + s(p5,k=50,bs="tp") + s(country, bs = "re"), data = scaled.H, method = "REML")
 # Check AIC
-AIC(gam.H) # -5547
-AIC(gam.H.red) # -5356
-summary(gam.H)
-summary(gam.H.red) # slight reduction in dev explaiend and AIC, so basically the same
+# AIC(gam.H) # -5547
+# AIC(gam.H.red) # -5356
+# summary(gam.H)
+# summary(gam.H.red) # slight reduction in dev explaiend and AIC, so basically the same
      
 ### UM 
 gam.UM <- gam(y ~ s(p1,bs="tp") + s(p2,bs="tp") + s(p3,bs="tp") + s(p4,bs="tp") + s(p5,bs="tp") + s(p6,bs="tp") +
@@ -209,22 +207,22 @@ gam.UM <- gam(y ~ s(p1,bs="tp") + s(p2,bs="tp") + s(p3,bs="tp") + s(p4,bs="tp") 
 #
 gam.UM.red <- gam(y ~ s(p1,bs="tp") + s(p3,bs="tp") + s(p4,bs="tp") + s(p5,bs="tp") + s(country, bs = "re"), data = scaled.UM, method = "REML")
 
-AIC(gam.UM) # -1414.24
-AIC(gam.UM.red) # -1385.34
-summary(gam.UM)
-summary(gam.UM.red) # slight reduction in dev explaiend and AIC, so basically the same
+#AIC(gam.UM) # -1414.24
+#AIC(gam.UM.red) # -1385.34
+#summary(gam.UM)
+#summary(gam.UM.red) # slight reduction in dev explaiend and AIC, so basically the same
 
 ### LM
 gam.LM <- gam(y ~ s(p1,bs="tp") + s(p2,bs="tp") + s(p3,bs="tp") + s(p4,bs="tp") + s(p5,bs="tp") + s(p6,bs="tp") + s(country, bs = "re"), data = scaled.LM, method = "REML")
 gam.LM.red <- gam(y ~ s(p1,bs="tp") + s(p2,bs="tp") + s(p4,bs="tp") + s(p5,bs="tp") + s(country, bs = "re"), data = scaled.LM, method = "REML")
 
-AIC(gam.LM) # 
-AIC(gam.LM.red) # clear reduction in AIC
+#AIC(gam.LM) # 
+#AIC(gam.LM.red) # clear reduction in AIC
 
 ### Anyways, doesn't look like reducing the nb of variables necessarily improves the GAMs...run the optimization tests like for RF
 
 ### 10/12/19: Examine concurvity (non linear dependencies among predictors in the GAMs)
-?concurvity
+# ?concurvity
 # Concurvity occurs when some smooth term in a model could be approximated by one or more of the other smooth terms in the model. This is often the case when a smooth of space is included in a model, along with smooths of other covariates that also vary more or less smoothly in space. Similarly it tends to be an issue in models including a smooth of time, along with smooths of other time varying covariates.
 # Concurvity can be viewed as a generalization of co-linearity, and causes similar problems of interpretation. It can also make estimates somewhat unstable
 
@@ -249,13 +247,13 @@ mgcv::concurvity(gam.LM, full = T)
 ### Ok, calculate concurvity with fewer and uncorrelated parameters
 gam.test <- gam(y ~ s(p5,bs="tp") + s(p1, bs = "re") + s(p3, bs = "re"), data = scaled.H, method = "REML")
 mgcv::concurvity(gam.test, full = TRUE)  
-summary(gam.test)
+# summary(gam.test)
 
 gam.test <- gam(y ~ s(p5,k=50,bs="tp") + s(country, bs = "re"), data = scaled.H, method = "REML")
 summary(gam.test)
-mgcv::concurvity(gam.test, full = TRUE)  
-# Yeah, basically p5 does everything by itself here 
-# And its smooth terms can be approximated from those of the countries' random effects!
+# mgcv::concurvity(gam.test, full = TRUE)  
+### Yeah, basically p5 does everything by itself here 
+### And its smooth terms can be approximated from those of the countries' random effects!
 
 ### ------------------------------------------------------------------------
 
@@ -648,22 +646,21 @@ res.gams <- mclapply(incomes, function(inc) {
 ) # eo mclapply - incomes
 # Rbind
 ddf <- dplyr::bind_rows(res.gams)
-dim(ddf)
-summary(ddf)
+#dim(ddf)
+#summary(ddf)
 
-# 18/01/23: Save so you don't have to wait 15min everytime 
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/GAM_optimization_per_GNI")
+### 18/01/23: Save so you don't have to wait 15min everytime 
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/GAM_optimization_per_GNI")
 save(ddf, file = "table_gam_tests_18_01_23.Rdata")
-rm(res.gams) ; gc()
-
+#rm(res.gams) ; gc()
 
 
 ### 19/01/23: Plot distribution of MSE/r2/AIC etc. facet per GNI and per npreds
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/GAM_optimization_per_GNI")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/GAM_optimization_per_GNI")
 ddf <- get(load("table_gam_tests_18_01_23.Rdata"))
-dim(ddf)
-str(ddf)
-summary(ddf)
+#dim(ddf)
+#str(ddf)
+#summary(ddf)
 
 plot1 <- ggplot(aes(x = factor(nPV), y = MSE, fill = factor(GNI)), data = ddf) + geom_boxplot(colour = "black") + 
         scale_fill_manual(name = "GNI", values = c("#3B9AB2","#F21A00","#EBCC2A","#78B7C5") ) + 
@@ -999,9 +996,10 @@ res.inc <- lapply(incomes, function(inc) {
   
 # Rbind to check results 
 table <- dplyr::bind_rows(res.inc)
-dim(table); head(table)
-summary(table)
-table
+#dim(table); head(table)
+#summary(table)
+#table
+
 rm(res.inc); gc()
 
 setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/GAM_optimization_per_GNI")
@@ -1084,18 +1082,17 @@ ggsave(plot = plot, filename = "boxplot_logMSE_k_L.pdf", dpi = 300, height = 5, 
 
 ### Summarize some mean MSE/R2/AIC per k values and class
 sum.r2 <- data.frame(table %>% group_by(GNI,k) %>% summarize(R2 = mean(r2,na.rm = T), sd = sd(r2,na.rm = T)) ) # eo ddf
-sum.r2
+#sum.r2
 
 sum.AIC <- data.frame(table %>% group_by(GNI,k) %>% summarize(AIC = ztod lisa ann(AIC,na.rm = T), sd = sd(r2,na.rm = T)) ) # eo ddf
-sum.AIC
-
+#sum.AIC
 
 sum.MSE <- data.frame(table %>% group_by(GNI,k) %>% summarize(MSE = ztod lisa ann(MSE,na.rm = T), sd = sd(r2,na.rm = T)) ) # eo ddf
-sum.MSE
+#sum.MSE
 ### Nothing really stands out...
 
 sum.DevExpl <- data.frame(table %>% group_by(GNI,k) %>% summarize(MSE = ztod lisa ann(DevExpl,na.rm = T), sd = sd(DevExpl,na.rm = T)) ) # eo ddf
-sum.DevExpl
+#sum.DevExpl
 
 ### Conclusion: based on R2, AIC and DevExpl profiles, the optimal range seem to be: 
 # k = 15-25 for H
