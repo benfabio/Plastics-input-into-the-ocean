@@ -33,22 +33,22 @@ worldmap <- getMap(resolution = "high")
 
 ### A.1. Retrieve ensemble predictions and errors
 ### Retrieve RF ensemble predictions and errors
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/RF_predictions"); dir()[grep("median",dir())]
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_predictions"); dir()[grep("median",dir())]
 pred.rf <- read.table("table_ranges_RF_median_predictions_23_01_23.txt", h = T, sep = ";") 
 error.rf <- read.table("table_RF_median_errors_percentage_23_01_23.txt", h = T, sep = ";")
 
 ### Retrieve GAM ensemble predictions and errors
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GAM_predictions"); dir()[grep("median",dir())]
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GAM_predictions"); dir()[grep("median",dir())]
 pred.gam <- read.table("table_ensemble_predictions_GAM_23_01_23.txt", h = T, sep = "\t")
 error.gam <- read.table("table_GAM_median_errors_percentage_23_01_23.txt", h = T, sep = ";")
 
 ### Retrieve NNET ensemble predictions and errors
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/NNET_predictions"); dir()[grep("median",dir())]
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/NNET_predictions"); dir()[grep("median",dir())]
 pred.nnet <- read.table("table_ensemble_predictions_NNET_24_01_23.txt", h = T, sep = "\t")
 error.nnet <- read.table("table_NNET_median_errors_percentage_24_01_23.txt", h = T, sep = ";")
 
 ### Retrieve GBM ensemble predictions and errors
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GBM_predictions"); dir()[grep("ensemble",dir())]
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GBM_predictions"); dir()[grep("ensemble",dir())]
 pred.gbm <- read.table("table_ensemble_predictions_GBM_30_01_23.txt", h = T, sep = "\t")
 error.gbm <- read.table("table_GBM_median_errors_percentage_30_01_23.txt", h = T, sep = ";")
 
@@ -141,8 +141,8 @@ ggplot(data = m.pred) + geom_point(aes(x = MSW_NNET, y = MSW_GBM)) +
 # summary(m.pred)
 
 # Issue with some countries
-m.pred[m.pred$MSW_GAM > 4,] # 
-m.pred[m.pred$MSW_NNET > 4,]
+#m.pred[m.pred$MSW_GAM > 4,] # 
+#m.pred[m.pred$MSW_NNET > 4,]
 #unique(m.pred[m.pred$MSW_NNET > 4,"Country"])
 countries2remove <- unique(m.pred[m.pred$MSW_GAM > 4,"Country"])
 # [1] "Botswana"                  "South Sudan"              
@@ -209,7 +209,7 @@ ggsave(plot = p6, filename = "plot_compare_preds_GAMxGBM_30_01_23.pdf", dpi = 30
 
 ### Compare errors
 # Check ranges
-summary(m.error)
+#summary(m.error)
 
 ### Plot distrbution of errors per model
 m.m.error <- melt(m.error)
@@ -307,8 +307,8 @@ colnames(m.pred.glm)[c(2,3)] <- c("Year","MSW_GLM")
 colnames(m.error.glm)[c(2,3)] <- c("Year","Error_GLM")
 m.pred$MSW_GLM <- m.pred.glm$MSW_GLM
 m.error$Error_GLM <- m.error.glm$Error_GLM
-# summary(m.pred)
-# summary(m.error)
+#summary(m.pred)
+#summary(m.error)
 
 ### Re-plot distrbution of errors per model
 m.m.error <- melt(m.error)
@@ -358,21 +358,19 @@ colnames(m.ddf.gam)[c(2:3)] <- c("Year","MSW")
 
 ### Rbind both and compute median/mean/sdev/IQR 
 m.ddf <- rbind(m.ddf.rf,m.ddf.gam)
-# dim(m.ddf)
-summary(m.ddf)
+#dim(m.ddf)
+#summary(m.ddf)
 
 ensemble <- data.frame(m.ddf %>%
             group_by(Country,Year) %>%
             summarize(MSW_median = median(MSW, na.rm = T), MSW_mean = mean(MSW, na.rm = T),
                 IQR = IQR(MSW, na.rm = T), STDEV = sd(MSW, na.rm = T))
 ) # eo ddf
-
-summary(ensemble)
-# unique(ensemble$MSW_mean)
+#summary(ensemble)
+#unique(ensemble$MSW_mean)
 
 setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/")
 write.table(x = ensemble, "table_ensemble_predictions_GAM+RF_09_02_23.txt", sep = "\t")
-
 
 ### ------------------------------------------------------------------------------------------------------------------------------------------------
 ### ------------------------------------------------------------------------------------------------------------------------------------------------
