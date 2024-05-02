@@ -28,13 +28,13 @@ library("neuralnet")
 worldmap <- getMap(resolution = "high")
 
 # Define main working dir
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/")
 WD <- getwd() 
 
 ### ------------------------------------------------------------------------------------------------------------------------------------------------
 
 ### First, as usual, get the PVs, remove outliers, scale them etc. Basically: prepare data for the models
-setwd(paste(WD,"/data/complete_data/", sep = "")) ; dir()
+setwd(paste(WD,"/data/", sep = "")) ; dir()
 MSW_collected_UN <- read.csv("MSW_collected_corrected_14_01_23.csv", na.strings = c("NA"), stringsAsFactors = F) # MSW = Municipal solid waste
 colnames(MSW_collected_UN) <- c("Country", 1990:2019) # adjust colnames
 young_pop <- read.csv("young_pop.csv", na.strings = c("NA"), stringsAsFactors = F)
@@ -68,7 +68,6 @@ for(i in 1:n) {
           MSW_collected_UN[i,-1] <- temp
       } # eo if loop
 } # eo for loop 
-
 # Set parameters: p = predictors, y = goal variable. Scale some PVs (GDP, energy_consumption etc.) to avoid errors in RF
 p1 <- t(elec_acc[,-1])
 p2 <- log(t(energy_consumption[,-1]))
@@ -226,8 +225,8 @@ list.preds.L <- append(list.preds.L,list.preds.L.2)
 
 ### Make FUN to optimize the parameters of the NNET
 # Arguments to test the fun
-inc <- "H"
-i <- 11
+# inc <- "H"
+# i <- 11
 # params <- c(2:7)
 # form <- y ~ p1 + p2 + p3 + p4 + p5 + p6
 
@@ -468,7 +467,7 @@ nnet.optimizer <- function(inc) {
                                               r2 <- summary(lm(pred ~ measure))$r.squared
                                               skillz <- data.frame(GNI = inc, formula = form1, R2 = r2, MSE = MSE.NN[j,n], nHL = n) # eo ddf
                                               
-                                              setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/NNET_training/")
+                                              setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/NNET_training/")
                                               save(skillz, file = paste("table_skills_",inc,"_",form1,"_",n,".Rdata",sep="") )
                                               
                                               # Plot pred v measure                                              
@@ -565,7 +564,7 @@ nnet.optimizer("LM")
 nnet.optimizer("L")
 
 ### Check results 
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/NNET_training/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/NNET_training/")
 files <- dir()[grep('table_skills',dir())]
 res <- lapply(files, function(f){d <- get(load(f)); return(d)}) # eo lapply
 ddf <- bind_rows(res)
@@ -573,7 +572,7 @@ ddf <- bind_rows(res)
 data.frame(ddf %>% group_by(GNI,formula) %>% summarize(R2 = median(R2), MSE = median(MSE)))
 data.frame(ddf %>% group_by(GNI,nHL) %>% summarize(R2 = median(R2), MSE = median(MSE)))
 
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/plots/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/plots/")
 
 # Plot distribution of MSE and R2 per n layers and then facet per GNI
 plot1 <- ggplot(aes(x = factor(nHL), y = R2), data = ddf) + geom_boxplot(fill = "grey55", colour = "black") + 
