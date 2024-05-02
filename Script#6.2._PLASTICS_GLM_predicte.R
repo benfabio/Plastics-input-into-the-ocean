@@ -29,13 +29,13 @@ library("gbm")
 worldmap <- getMap(resolution = "high")
 
 # Define main working dir
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/")
 WD <- getwd() 
 
 ### ------------------------------------------------------------------------------------------------------------------------------------------------
 
 ### First, as usual, get the PVs, remove outliers, scale them etc. Basically: prepare data for the models
-setwd(paste(WD,"/data/complete_data/", sep = "")) ; dir()
+setwd(paste(WD,"/data/", sep = "")) ; dir()
 MSW_collected_UN <- read.csv("MSW_collected_corrected_14_01_23.csv", na.strings = c("NA"), stringsAsFactors = F) # MSW = Municipal solid waste
 colnames(MSW_collected_UN) <- c("Country", 1990:2019) # adjust colnames
 young_pop <- read.csv("young_pop.csv", na.strings = c("NA"), stringsAsFactors = F)
@@ -362,7 +362,7 @@ glm.predicter <- function(inc) {
                 error_country_perc$mean <- error_avg
                                
                 # Save outputs 
-                setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GLM_predictions")
+                setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GLM_predictions")
                 write.table(x = error_country_perc, file = paste("table_error_perc_",inc,"_",paste(preds, collapse = '+'),"_",n,".txt", sep = ""), sep = "\t")
                 write.table(x = pred, file = paste("table_pred_",inc,"_",paste(preds, collapse = '+'),"_",n,".txt", sep = ""), sep = "\t")   
                                 
@@ -388,7 +388,7 @@ glm.predicter("L")
 # All good
 
 ### Check the skills of the trained models
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GLM_models_training")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GLM_models_training")
 files <- dir()[grep("table_skills",dir())]
 res <- lapply(files, function(f) { d <- get(load(f)); return(d) })
 # Rbind
@@ -396,7 +396,7 @@ ddf <- bind_rows(res)
 dim(ddf); summary(ddf)
 
 ### R2
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/plots")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/plots")
 plot <- ggplot(aes(x = factor(GNI), y = R2, fill = factor(GNI)), data = ddf) + geom_boxplot(colour = "black") + 
             scale_fill_manual(name = "R2", values = c("#3B9AB2","#F21A00","#EBCC2A","#78B7C5") ) + 
             xlab("GNI classes") + ylab("R2") + theme_bw()
@@ -410,7 +410,7 @@ ggsave(plot = plot, filename = "boxplot_full.glms_MSE_GNI_30_01_23.pdf", dpi = 3
 
 
 ### And check % error for each class/ country?
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GLM_predictions")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GLM_predictions")
 files <- dir()[grep("table_error_perc",dir())]
 # d <- read.table("table_error_perc_UM_p3+p4+p5+p6_91.txt", sep = "\t", h = T)
 res <- lapply(files, function(f) { d <- read.table(f, sep = "\t", h = T); return(d) })
@@ -426,7 +426,7 @@ sum.error <- data.frame(m.ddf %>% group_by(Country) %>% summarize(median = media
 # summary(sum.error) 
 
 ### Compute mean annual ensemble predictions for GBMs. Re-compute error of the ensemble predictions to the y_org. 
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GLM_predictions")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GLM_predictions")
 # Load all predictions and compute mean/median annual MSW per country
 files <- dir()[grep(paste("table_pred_", sep = ""),dir())] # length(files)
 res <- lapply(files, function(f) { d <- read.table(f, sep = "\t", h = T); return(d) } ) # eo lapply
