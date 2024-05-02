@@ -28,7 +28,7 @@ library("gbm")
 worldmap <- getMap(resolution = "high")
 
 # Define main working dir
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/")
 WD <- getwd() 
 
 ### ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ WD <- getwd()
 ### A°) Setting up data and writing the master function to test parameters of various GBMs (10 models per combinations)
 
 ### First, as usual, get the PVs, remove outliers, scale them etc. Basically: prepare data for the models
-setwd(paste(WD,"/data/complete_data/", sep = "")) ; dir()
+setwd(paste(WD,"/data/", sep = "")) ; dir()
 MSW_collected_UN <- read.csv("MSW_collected_corrected_14_01_23.csv", na.strings = c("NA"), stringsAsFactors = F) # MSW = Municipal solid waste
 colnames(MSW_collected_UN) <- c("Country", 1990:2019) # adjust colnames
 young_pop <- read.csv("young_pop.csv", na.strings = c("NA"), stringsAsFactors = F)
@@ -70,7 +70,6 @@ for(i in 1:n) {
           MSW_collected_UN[i,-1] <- temp
       } # eo if loop
 } # eo for loop 
-
 # Set parameters: p = predictors, y = goal variable. Scale some PVs (GDP, energy_consumption etc.) to avoid errors in RF
 p1 <- t(elec_acc[,-1])
 p2 <- log(t(energy_consumption[,-1]))
@@ -187,7 +186,6 @@ list.preds.L <- append(list.preds.L,list.preds.L.2)
 # shrinkage (learning rate or step-size reduction): usually between 0.01 and 0.1 --> 0.01 & 0.1
 # n.trees (This is equivalent to the number of iterations and the number of basis functions in the additive expansion) --> 25, 50, 75, 100, 200
 ### according to LG: interaction.depth & n.trees are the 2 main parameters controlling model complexity and overfitting
-
 
 ### Write function to test this grid of parameters for each GNI class and list of predictors - return R2 and MSE/RMSE
 # inc <- "LM" # for testing function below
@@ -378,7 +376,7 @@ table.all <- rbind(table.opti.H, table.opti.UM, table.opti.LM, table.opti.L)
 # summary(table.all)
 
 ### Save output 
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/GBM_optimization_per_GNI")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/GBM_optimization_per_GNI")
 save(x = table.all, file = "table_parameters_tests_GBM_v3_27_01_23.RData")
 
 ### 26/01/23: Note: 'v2' for Ntrees ranging from 2 to 100
@@ -389,7 +387,7 @@ save(x = table.all, file = "table_parameters_tests_GBM_v3_27_01_23.RData")
 
 ### B°) Examine outputs (MSE and R2 per GNI and parameters)
 library("ggpubr")
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/plots") 
+setwd("/net/kryo/work/fabioben/Inputs_plastics/plots") 
 
 # colnames(table.all)
 #groups <- data.frame(table.all %>% group_by(GNI) %>% summarize(MSE = median(MSE, na.rm = T)))
@@ -696,16 +694,16 @@ table.opti.LM <- bind_rows( gbm.tester("LM") )
 table.opti.L <- bind_rows( gbm.tester("L") )
 # dim(table.opti.H) ; dim(table.opti.UM) ; dim(table.opti.LM) ; dim(table.opti.L) # OK, ~1000 each
 table.all <- rbind(table.opti.H, table.opti.UM, table.opti.LM, table.opti.L)
-summary(table.all)
+#summary(table.all)
 
 ### Save output 
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/GBM_optimization_per_GNI")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/GBM_optimization_per_GNI")
 save(x = table.all, file = "table_parameters_tests_GBM_full_models_27_01_23.RData")
 
 ### 27/01/23: Check outputs of full models 
-library("ggpubr")
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/plots") 
-colnames(table.all)
+#library("ggpubr")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/plots") 
+#colnames(table.all)
 
 p1 <- ggplot(aes(x = factor(GNI), y = MSE, fill = factor(GNI)), data = table.all) +
     geom_boxplot(colour = "black") + 
@@ -726,7 +724,7 @@ table.all.gbm <- table.all
 # dim(table.all.gbm)
 
 # Get the GAMs' scores
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GAM_models_training")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GAM_models_training")
 # length(dir()[grep("table_skills_gam.full_H",dir())])
 # length(dir()[grep("table_skills_gam.full_UM",dir())])
 # length(dir()[grep("table_skills_gam.full_LM",dir())])
@@ -735,11 +733,11 @@ files <- dir()[grep("table_skills",dir())]
 res <- lapply(files, function(f) { d <- get(load(f)); return(d) })
 # Rbind
 table.all.gam <- bind_rows(res)
-dim(table.all.gam); summary(table.all.gam)
+#dim(table.all.gam); summary(table.all.gam)
 rm(res); gc()
 
 # Get the RF's scores
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/RF_models_training")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_models_training")
 # length(dir()[grep("table_skills_RF_H_",dir())])
 # length(dir()[grep("table_skills_RF_UM_",dir())])
 # length(dir()[grep("table_skills_RF_LM_",dir())])
@@ -748,7 +746,7 @@ files <- dir()[grep("table_skills",dir())]
 res <- lapply(files, function(f) { d <- get(load(f)); return(d) })
 # Rbind
 table.all.rf <- bind_rows(res)
-dim(table.all.rf); summary(table.all.rf)
+#dim(table.all.rf); summary(table.all.rf)
 rm(res); gc()
 
 ### Rbind by common colnames
@@ -758,7 +756,7 @@ table.all.gam$Model <- "GAM"
 table.all.gbm$Model <- "GBM"
 commons <- c("Model","GNI","formula","MSE","R2")
 table <- rbind(table.all.rf[,commons], table.all.gam[,commons], table.all.gbm[,commons])
-dim(table)
+#dim(table)
 
 ### Plot MSE and R2 per Modle and per GNI 
 p1 <- ggplot(aes(x = factor(Model), y = MSE, fill = factor(GNI)), data = table) +
@@ -773,7 +771,7 @@ p2 <- ggplot(aes(x = factor(Model), y = R2, fill = factor(GNI)), data = table) +
     xlab("Model type") + ylab("R2") + theme_bw() +
     facet_wrap(~ factor(GNI), scales = "free")
     
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/plots") 
+setwd("/net/kryo/work/fabioben/Inputs_plastics/plots") 
 panel <- ggarrange(p1, p2, ncol = 2, nrow = 1, align = "hv", common.legend = T)
 ggsave(panel, filename = "boxplots_RFxGAMxGBM_R2_MSE_27_01_23.pdf", dpi = 300, height = 8, width = 8)
 
