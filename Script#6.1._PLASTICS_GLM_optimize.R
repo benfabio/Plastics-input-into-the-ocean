@@ -28,7 +28,7 @@ library("gbm")
 worldmap <- getMap(resolution = "high")
 
 # Define main working dir
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/")
 WD <- getwd() 
 
 ### ------------------------------------------------------------------------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ WD <- getwd()
 ### A°) Setting up data and writing the master function to test parameters of various GBMs (10 models per combinations)
 
 ### First, as usual, get the PVs, remove outliers, scale them etc. Basically: prepare data for the models
-setwd(paste(WD,"/data/complete_data/", sep = "")) ; dir()
+setwd(paste(WD,"/data/", sep = "")) ; dir()
 MSW_collected_UN <- read.csv("MSW_collected_corrected_14_01_23.csv", na.strings = c("NA"), stringsAsFactors = F) # MSW = Municipal solid waste
 colnames(MSW_collected_UN) <- c("Country", 1990:2019) # adjust colnames
 young_pop <- read.csv("young_pop.csv", na.strings = c("NA"), stringsAsFactors = F)
@@ -301,7 +301,7 @@ table.all <- rbind(table.opti.H, table.opti.UM, table.opti.LM, table.opti.L)
 # summary(table.all)
 
 ### Save output 
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/GLM_optimization_per_GNI")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/GLM_optimization_per_GNI")
 save(x = table.all, file = "table_parameters_tests_GLM_v3_27_01_23.RData")
 
 
@@ -309,7 +309,7 @@ save(x = table.all, file = "table_parameters_tests_GLM_v3_27_01_23.RData")
 
 ### B°) Examine outputs (MSE and R2 per GNI and parameters)
 library("ggpubr")
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/plots") 
+setwd("/net/kryo/work/fabioben/Inputs_plastics/plots") 
 
 # colnames(table.all)
 #groups <- data.frame(table.all %>% group_by(GNI) %>% summarize(MSE = median(MSE, na.rm = T)))
@@ -486,12 +486,12 @@ table.all <- rbind(table.opti.H, table.opti.UM, table.opti.LM, table.opti.L)
 summary(table.all)
 
 ### Save output 
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/GLM_optimization_per_GNI")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/GLM_optimization_per_GNI")
 save(x = table.all, file = "table_parameters_tests_GLM_models_30_01_23.RData")
 
 ### 30/01/23: Check outputs of models 
 library("ggpubr")
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/plots") 
+setwd("/net/kryo/work/fabioben/Inputs_plastics/plots") 
 colnames(table.all)
 
 p1 <- ggplot(aes(x = factor(GNI), y = MSE, fill = factor(GNI)), data = table.all) +
@@ -512,7 +512,7 @@ ggsave(panel, filename = "boxplots_GLM_R2_MSE_30_01_23.pdf", dpi = 300, height =
 table.all.glm <- table.all
 
 # Get the GAMs' scores
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GAM_models_training")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GAM_models_training")
 files <- dir()[grep("table_skills",dir())]
 res <- lapply(files, function(f) { d <- get(load(f)); return(d) })
 # Rbind
@@ -520,7 +520,7 @@ table.all.gam <- bind_rows(res)
 rm(res); gc()
 
 # Get the RF's scores
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/RF_models_training")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/RF_models_training")
 files <- dir()[grep("table_skills",dir())]
 res <- lapply(files, function(f) { d <- get(load(f)); return(d) })
 # Rbind
@@ -528,7 +528,7 @@ table.all.rf <- bind_rows(res)
 rm(res); gc()
 
 # Get the GBM scores
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/GBM_models_training")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/GBM_models_training")
 files <- dir()[grep("table_skills",dir())]
 res <- lapply(files, function(f) { d <- get(load(f)); return(d) })
 # Rbind
@@ -536,7 +536,7 @@ table.all.gbm <- bind_rows(res)
 rm(res); gc()
 
 # Get the NNET scores
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/outputs/models/NNET_models_training")
+setwd("/net/kryo/work/fabioben/Inputs_plastics/outputs/models/NNET_models_training")
 files <- dir()[grep("table_skills",dir())]
 res <- lapply(files, function(f) { d <- get(load(f)); return(d) })
 # Rbind
@@ -568,7 +568,7 @@ p2 <- ggplot(aes(x = factor(Model), y = R2, fill = factor(GNI)), data = table) +
     xlab("Model type") + ylab("R2") + theme_bw() +
     facet_wrap(~ factor(GNI), scales = "free")
     
-setwd("/net/kryo/work/fabioben/Inputs_plastics/2023/plots") 
+setwd("/net/kryo/work/fabioben/Inputs_plastics/plots") 
 panel <- ggarrange(p1, p2, ncol = 2, nrow = 1, align = "hv", common.legend = T)
 ggsave(panel, filename = "boxplots_GLMxGAMxRFxGBMxNNET_R2_MSE_30_01_23.pdf", dpi = 300, height = 8, width = 10)
 
